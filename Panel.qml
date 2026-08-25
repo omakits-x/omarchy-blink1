@@ -122,7 +122,6 @@ Panel {
     Column {
       width: pageLoader.width
       spacing: Style.space(14)
-      implicitHeight: implicitColumn.implicitHeight
 
       Column {
         id: implicitColumn
@@ -270,7 +269,6 @@ Panel {
     Column {
       width: pageLoader.width
       spacing: Style.space(14)
-      implicitHeight: colorColumn.implicitHeight
       Column {
         id: colorColumn
         width: parent.width
@@ -381,7 +379,6 @@ Panel {
     Column {
       width: pageLoader.width
       spacing: Style.space(12)
-      implicitHeight: patternColumn.implicitHeight
       Column {
         id: patternColumn
         width: parent.width
@@ -456,7 +453,6 @@ Panel {
     Column {
       width: pageLoader.width
       spacing: Style.space(12)
-      implicitHeight: advancedColumn.implicitHeight
       Column {
         id: advancedColumn
         width: parent.width
