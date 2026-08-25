@@ -45,7 +45,7 @@ Panel {
     open: root.opened
     centerOnBar: true
     focusTarget: keyCatcher
-    contentWidth: panel.fittedContentWidth(Style.space(390))
+    contentWidth: panel.fittedContentWidth(Style.space(430))
     contentHeight: panel.fittedContentHeight(contentColumn.implicitHeight)
 
     PanelKeyCatcher {
@@ -73,16 +73,26 @@ Panel {
         Column {
         id: contentColumn
           width: parent.width
-        spacing: Style.space(14)
+        spacing: Style.space(16)
 
         Row {
           spacing: Style.space(12)
-          Text {
-            text: "●"
-            color: hostWidget ? hostWidget.currentColor : contentForeground
-            font.family: root.contentFontFamily
-            font.pixelSize: Style.font.display
+          BorderSurface {
+            width: Style.space(42)
+            height: width
+            radius: Style.cornerRadius
+            color: hostWidget ? hostWidget.currentColor : Color.accent
+            borderSpec: Border.flat(root.contentForeground, Math.max(1, Style.space(1)))
             anchors.verticalCenter: parent.verticalCenter
+
+            Rectangle {
+              width: Style.space(12)
+              height: width
+              radius: width / 2
+              color: root.contentForeground
+              anchors.centerIn: parent
+              opacity: 0.9
+            }
           }
           Column {
             spacing: Style.space(2)
@@ -95,7 +105,9 @@ Panel {
             }
             Text {
               text: hostWidget ? hostWidget.statusText : "Ready"
-              color: Qt.darker(root.contentForeground, 1.5)
+              color: hostWidget && !hostWidget.deviceAvailable
+                ? (root.bar ? root.bar.urgent : Color.urgent)
+                : Qt.darker(root.contentForeground, 1.5)
               font.family: root.contentFontFamily
               font.pixelSize: Style.font.caption
               font.letterSpacing: 1
@@ -128,9 +140,11 @@ Panel {
             ]
             Button {
               required property var modelData
+              iconText: "●"
               text: modelData.label
-              foreground: root.contentForeground
+              foreground: modelData.value
               accent: modelData.value
+              selected: hostWidget && String(hostWidget.currentColor).toUpperCase() === modelData.value
               onClicked: root.color(modelData.value)
             }
           }
@@ -145,11 +159,13 @@ Panel {
 
         Row {
           spacing: Style.space(8)
-          Button {
-            text: hostWidget ? hostWidget.selectedDeviceLabel : "ALL DEVICES"
-            foreground: root.contentForeground
-            onClicked: if (hostWidget) hostWidget.cycleDevice()
-          }
+            Button {
+              text: hostWidget ? hostWidget.selectedDeviceLabel : "ALL DEVICES"
+              foreground: root.contentForeground
+              bordered: true
+              iconText: "•"
+              onClicked: if (hostWidget) hostWidget.cycleDevice()
+            }
           Text {
             text: hostWidget && hostWidget.devices.length > 0
               ? hostWidget.devices.length + " connected"
@@ -205,6 +221,8 @@ Panel {
           width: parent.width
           text: root.advancedOpen ? "HIDE ADVANCED" : "SHOW ADVANCED"
           foreground: root.contentForeground
+          bordered: true
+          iconText: root.advancedOpen ? "−" : "+"
           onClicked: root.advancedOpen = !root.advancedOpen
         }
 
