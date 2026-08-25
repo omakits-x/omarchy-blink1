@@ -72,7 +72,7 @@ Panel {
 
         Column {
         id: contentColumn
-        width: Math.max(parent.width, implicitWidth)
+          width: parent.width
         spacing: Style.space(14)
 
         Row {
