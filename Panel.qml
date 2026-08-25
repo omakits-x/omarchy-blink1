@@ -158,23 +158,35 @@ Panel {
         }
 
         Row {
-          spacing: Style.space(8)
+          spacing: Style.space(6)
+          Button {
+            text: "ALL DEVICES"
+            foreground: root.contentForeground
+            bordered: true
+            iconText: "•"
+            selected: hostWidget && hostWidget.selectedDevice === "all"
+            onClicked: if (hostWidget) hostWidget.selectDevice("all")
+          }
+          Repeater {
+            model: hostWidget ? hostWidget.devices : []
             Button {
-              text: hostWidget ? hostWidget.selectedDeviceLabel : "ALL DEVICES"
+              required property var modelData
+              text: "DEVICE " + modelData.id
               foreground: root.contentForeground
               bordered: true
-              iconText: "•"
-              onClicked: if (hostWidget) hostWidget.cycleDevice()
+              selected: hostWidget && hostWidget.selectedDevice === String(modelData.id)
+              onClicked: if (hostWidget) hostWidget.selectDevice(modelData.id)
             }
-          Text {
-            text: hostWidget && hostWidget.devices.length > 0
-              ? hostWidget.devices.length + " connected"
-              : "No device detected"
-            color: Qt.darker(root.contentForeground, 1.5)
-            font.family: root.contentFontFamily
-            font.pixelSize: Style.font.bodySmall
-            anchors.verticalCenter: parent.verticalCenter
           }
+        }
+
+        Text {
+          text: hostWidget && hostWidget.devices.length > 0
+            ? hostWidget.devices.length + " connected · click a target"
+            : "No device detected"
+          color: Qt.darker(root.contentForeground, 1.5)
+          font.family: root.contentFontFamily
+          font.pixelSize: Style.font.bodySmall
         }
 
         Row {

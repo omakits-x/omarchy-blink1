@@ -70,7 +70,11 @@ BarWidget {
     var options = ["all"]
     for (var i = 0; i < root.devices.length; i++) options.push(String(root.devices[i].id))
     var current = options.indexOf(root.selectedDevice)
-    var next = options[(current + 1 + options.length) % options.length]
+    root.selectDevice(options[(current + 1 + options.length) % options.length])
+  }
+
+  function selectDevice(value) {
+    var next = String(value || "all")
     root.selectedDevice = next
     persist({ device: next })
     root.statusText = next === "all" ? "All blink(1) devices" : "Device " + next + " selected"
