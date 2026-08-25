@@ -252,25 +252,32 @@ BarWidget {
 
         Image {
           anchors.fill: parent
-          source: Qt.resolvedUrl(root.effectActive ? "thingm.svg" : "thingm.png")
+          visible: !root.effectActive
+          source: Qt.resolvedUrl("thingm.png")
           fillMode: Image.PreserveAspectFit
           smooth: true
           opacity: root.deviceAvailable ? 1.0 : 0.45
         }
 
         Rectangle {
-          width: Math.max(5, Math.round(parent.width * 0.24))
+          id: effectTile
+          visible: root.effectActive
+          width: Math.max(8, Math.round(parent.width * 0.62))
           height: width
-          radius: width / 2
           anchors.centerIn: parent
+          radius: width / 2
           color: root.currentColor
           opacity: root.deviceAvailable ? 1.0 : 0.45
+          border.width: Math.max(1, Math.round(width * 0.08))
+          border.color: "#FFFFFF"
+          border.alpha: 0.25
           scale: pulseScale
           property real pulseScale: 1.0
+
           SequentialAnimation on pulseScale {
             running: root.effectActive
             loops: Animation.Infinite
-            NumberAnimation { to: 0.78; duration: 220; easing.type: Easing.OutCubic }
+            NumberAnimation { to: 0.82; duration: 220; easing.type: Easing.OutCubic }
             NumberAnimation { to: 1.0; duration: 420; easing.type: Easing.InOutCubic }
           }
         }
