@@ -277,8 +277,7 @@ BarWidget {
           color: root.currentColor
           opacity: root.deviceAvailable ? 1.0 : 0.45
           border.width: Math.max(1, Math.round(width * 0.08))
-          border.color: "#FFFFFF"
-          border.alpha: 0.25
+          border.color: Qt.rgba(1, 1, 1, 0.25)
           scale: pulseScale
           property real pulseScale: 1.0
 
