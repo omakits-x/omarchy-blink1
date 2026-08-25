@@ -20,6 +20,7 @@ BarWidget {
   property real pulseOpacity: 1.0
   property string deviceOutputText: ""
   property string actionOutputText: ""
+  property var pendingDevices: []
   property var actionCommand: []
 
   readonly property bool panelOpen: panelLoader.item ? panelLoader.item.opened === true : false
@@ -45,8 +46,7 @@ BarWidget {
   function refreshDevice() {
     if (!deviceCheck.running) {
       root.deviceOutputText = ""
-      root.devices = []
-      root.deviceAvailable = false
+      root.pendingDevices = []
       deviceCheck.running = true
     }
   }
@@ -55,11 +55,10 @@ BarWidget {
     var match = String(line || "").match(/\bid\s*:\s*(\d+)/i)
     if (!match) return
     var id = String(match[1])
-    var next = root.devices.slice()
+    var next = root.pendingDevices.slice()
     for (var i = 0; i < next.length; i++) if (String(next[i].id) === id) return
     next.push({ id: id, label: String(line).trim() })
-    root.devices = next
-    root.deviceAvailable = true
+    root.pendingDevices = next
   }
 
   function deviceArguments() {
@@ -180,6 +179,7 @@ BarWidget {
     stdout: SplitParser { onRead: function(line) { root.parseDeviceLine(line) } }
     stderr: SplitParser { onRead: function(line) { root.parseDeviceLine(line) } }
     onExited: function(exitCode) {
+      root.devices = root.pendingDevices
       root.deviceAvailable = exitCode === 0 && root.devices.length > 0
       var validSelection = root.selectedDevice === "all"
       for (var j = 0; j < root.devices.length; j++) if (String(root.devices[j].id) === root.selectedDevice) validSelection = true
@@ -187,8 +187,9 @@ BarWidget {
         root.selectedDevice = "all"
         root.persist({ device: "all" })
       }
-      if (root.deviceAvailable) root.statusText = "blink(1) ready"
-      else root.statusText = "No blink(1) detected — install blink1-tool-bin"
+      if (root.deviceAvailable && (root.statusText === "Checking blink(1)…" || root.statusText.indexOf("No blink") === 0))
+        root.statusText = "blink(1) ready"
+      else if (!root.deviceAvailable) root.statusText = "No blink(1) detected — install blink1-tool-bin"
     }
   }
 
@@ -216,15 +217,7 @@ BarWidget {
         root.statusText = "blink1-tool failed"
       }
       root.actionCommand = []
-      root.refreshDevice()
     }
-  }
-
-  Timer {
-    interval: 2000
-    running: true
-    repeat: true
-    onTriggered: root.refreshDevice()
   }
 
   Timer {
