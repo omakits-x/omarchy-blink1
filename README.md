@@ -18,22 +18,75 @@ official Omarchy shell plugin contract and invokes `blink1-tool` directly.
 
 ## Install on Arch / Omarchy
 
-Install the AUR package that provides the CLI:
+The plugin does not install packages automatically. Install the CLI explicitly,
+verify the USB device, then install the Omarchy plugin.
+
+### 1. Install the blink(1) CLI
+
+Using `paru`:
 
 ```bash
-paru -S blink1-tool-bin
+paru -S --needed blink1-tool-bin
 ```
 
-Then install and enable this plugin:
+Using `yay`:
+
+```bash
+yay -S --needed blink1-tool-bin
+```
+
+Confirm that the command is available:
+
+```bash
+command -v blink1-tool
+blink1-tool --version
+```
+
+### 2. Check USB access
+
+Plug in the blink(1) and run:
+
+```bash
+blink1-tool --list
+```
+
+You should see one line per device, for example `id:0`. If the command cannot
+access the device as your user, install or reload the upstream udev rule and
+reconnect the blink(1):
+
+```bash
+blink1-tool --add_udev_rules
+```
+
+The rule source is also available in the [blink1 repository](https://github.com/todbot/blink1/blob/main/linux/51-blink1.rules).
+
+### 3. Install and enable the plugin
 
 ```bash
 omarchy plugin add https://github.com/omakits-x/omarchy-blink1.git --enable --yes
 ```
 
-The plugin does not silently invoke `paru` or `pacman`; package installation is
-an explicit user action. If `blink1-tool --list` cannot access the device, install the udev rule as
-described by the package/upstream, then unplug and reconnect the blink(1).
-The upstream Linux rule is available in the [blink1 repository](https://github.com/todbot/blink1/blob/main/linux/51-blink1.rules).
+The widget is added to the right side of the bar. Open it with a left click.
+Right-click sends a random color, and middle-click turns the selected device(s)
+off. The panel's device button cycles through `ALL DEVICES` and every detected
+device ID.
+
+If the plugin is installed but not visible, rescan and enable it again:
+
+```bash
+omarchy-shell shell rescanPlugins
+omarchy plugin enable io.github.omakitsx.blink1
+omarchy plugin list --json
+```
+
+### Update or remove
+
+```bash
+omarchy plugin update io.github.omakitsx.blink1 --yes
+omarchy plugin remove io.github.omakitsx.blink1 --yes
+```
+
+Removing the plugin does not remove `blink1-tool-bin` or its udev rule.
 
 ## Development
 
