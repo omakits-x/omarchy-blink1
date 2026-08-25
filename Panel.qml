@@ -473,7 +473,7 @@ Panel {
         }
 
         Text {
-          visible: hostWidget && hostWidget.lastOutput !== ""
+          visible: root.advancedOpen && hostWidget && hostWidget.lastOutput !== ""
           height: visible ? implicitHeight : 0
           text: hostWidget ? hostWidget.lastOutput : ""
           color: root.contentForeground

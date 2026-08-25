@@ -243,10 +243,12 @@ BarWidget {
       waitForEnd: true
     }
     onExited: function(exitCode) {
-      root.lastOutput = String(root.actionOutputText || actionOutput.text || "").trim()
+      var output = String(root.actionOutputText || actionOutput.text || "").trim()
+      var outputLines = output.split(/\r?\n/).filter(function(line) { return line.trim() !== "" })
+      root.lastOutput = outputLines.length > 0 ? outputLines[outputLines.length - 1].trim() : ""
       if (exitCode === 0) {
         root.deviceAvailable = true
-        root.statusText = root.lastOutput !== "" ? root.lastOutput : "blink(1) ready"
+        root.statusText = root.effectName !== "idle" ? root.effectName : "blink(1) ready"
       } else {
         root.deviceAvailable = false
         root.lastOutput = String(actionError.text || root.lastOutput || "").trim()
