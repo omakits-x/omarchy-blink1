@@ -45,8 +45,21 @@ BarWidget {
   function refreshDevice() {
     if (!deviceCheck.running) {
       root.deviceOutputText = ""
+      root.devices = []
+      root.deviceAvailable = false
       deviceCheck.running = true
     }
+  }
+
+  function parseDeviceLine(line) {
+    var match = String(line || "").match(/\\bid\\s*:\\s*(\\d+)/i)
+    if (!match) return
+    var id = String(match[1])
+    var next = root.devices.slice()
+    for (var i = 0; i < next.length; i++) if (String(next[i].id) === id) return
+    next.push({ id: id, label: String(line).trim() })
+    root.devices = next
+    root.deviceAvailable = true
   }
 
   function deviceArguments() {
@@ -158,25 +171,14 @@ BarWidget {
 
   Process {
     id: deviceCheck
-    command: ["blink1-tool", "--list"]
+    command: ["/usr/bin/blink1-tool", "--list"]
     running: false
-    stdout: StdioCollector {
-      id: deviceOutput
-      waitForEnd: true
-      onStreamFinished: root.deviceOutputText = text
-    }
+    stdout: SplitParser { onRead: function(line) { root.parseDeviceLine(line) } }
+    stderr: SplitParser { onRead: function(line) { root.parseDeviceLine(line) } }
     onExited: function(exitCode) {
-      var output = String(root.deviceOutputText || deviceOutput.text || "")
-      var found = []
-      var lines = output.split("\\n")
-      for (var i = 0; i < lines.length; i++) {
-        var match = lines[i].match(/\\bid\\s*:\\s*(\\d+)/i)
-        if (match) found.push({ id: match[1], label: lines[i].trim() })
-      }
-      root.devices = found
-      root.deviceAvailable = exitCode === 0 && found.length > 0
+      root.deviceAvailable = exitCode === 0 && root.devices.length > 0
       var validSelection = root.selectedDevice === "all"
-      for (var j = 0; j < found.length; j++) if (String(found[j].id) === root.selectedDevice) validSelection = true
+      for (var j = 0; j < root.devices.length; j++) if (String(root.devices[j].id) === root.selectedDevice) validSelection = true
       if (!validSelection) {
         root.selectedDevice = "all"
         root.persist({ device: "all" })
