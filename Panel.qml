@@ -13,6 +13,7 @@ Panel {
   property var anchorItem: null
   property var hostWidget: null
   property string page: "control"
+  property int patternRepeats: 0
   readonly property var barIdentity: hostWidget || root
   readonly property color contentForeground: bar ? bar.foreground : Color.foreground
   readonly property string contentFontFamily: bar ? bar.fontFamily : Style.font.family
@@ -39,6 +40,12 @@ Panel {
     else if (value === "off") hostWidget.turnOff()
   }
   function pattern(value) { if (hostWidget) hostWidget.playPattern(value) }
+  function playOfficialPattern(value) {
+    var parts = String(value).split(",")
+    if (parts.length < 3) return
+    parts[0] = String(Math.max(0, root.patternRepeats))
+    root.pattern(parts.join(","))
+  }
 
   KeyboardPanel {
     id: panel
@@ -388,6 +395,31 @@ Panel {
           foreground: root.contentForeground
           fontFamily: root.contentFontFamily
         }
+        Row {
+          spacing: Style.space(8)
+          Text {
+            text: "REPEATS"
+            color: root.contentForeground
+            font.family: root.contentFontFamily
+            font.pixelSize: Style.font.body
+            anchors.verticalCenter: parent.verticalCenter
+          }
+          TextField {
+            id: repeatsField
+            width: Style.space(70)
+            text: "0"
+            inputMethodHints: Qt.ImhDigitsOnly
+            validator: IntValidator { bottom: 0; top: 9999 }
+            onTextChanged: root.patternRepeats = Math.max(0, Number(text || 0))
+          }
+          Text {
+            text: "0 = loop forever"
+            color: Qt.darker(root.contentForeground, 1.5)
+            font.family: root.contentFontFamily
+            font.pixelSize: Style.font.bodySmall
+            anchors.verticalCenter: parent.verticalCenter
+          }
+        }
         Grid {
           columns: 3
           rowSpacing: Style.space(6)
@@ -409,7 +441,7 @@ Panel {
               text: modelData.label
               foreground: root.contentForeground
               bordered: true
-              onClicked: root.pattern(modelData.value)
+              onClicked: root.playOfficialPattern(modelData.value)
             }
           }
         }
