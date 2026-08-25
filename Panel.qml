@@ -124,6 +124,29 @@ Panel {
           }
         }
 
+        Grid {
+          columns: 5
+          rowSpacing: Style.space(6)
+          columnSpacing: Style.space(6)
+          Repeater {
+            model: [
+              { label: "COLOR CYCLE", mode: "cycle" },
+              { label: "MOOD LIGHT", mode: "mood" },
+              { label: "STROBE LIGHT", mode: "strobe" },
+              { label: "WHITE", mode: "white" },
+              { label: "OFF", mode: "off" }
+            ]
+            Button {
+              required property var modelData
+              text: modelData.label
+              foreground: root.contentForeground
+              bordered: true
+              selected: hostWidget && hostWidget.effectMode === modelData.mode
+              onClicked: root.mode(modelData.mode)
+            }
+          }
+        }
+
         Text {
           text: "COLORS"
           color: Qt.darker(root.contentForeground, 1.5)
@@ -303,29 +326,6 @@ Panel {
           text: "COLOR PATTERNS"
           foreground: root.contentForeground
           fontFamily: root.contentFontFamily
-        }
-
-        Grid {
-          columns: 3
-          rowSpacing: Style.space(6)
-          columnSpacing: Style.space(6)
-          Repeater {
-            model: [
-              { label: "COLOR CYCLE", mode: "cycle" },
-              { label: "MOOD LIGHT", mode: "mood" },
-              { label: "STROBE LIGHT", mode: "strobe" },
-              { label: "WHITE", mode: "white" },
-              { label: "OFF", mode: "off" }
-            ]
-            Button {
-              required property var modelData
-              text: modelData.label
-              foreground: root.contentForeground
-              bordered: true
-              selected: hostWidget && hostWidget.effectMode === modelData.mode
-              onClicked: root.mode(modelData.mode)
-            }
-          }
         }
 
         Grid {

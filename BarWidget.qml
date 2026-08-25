@@ -18,6 +18,7 @@ BarWidget {
   property string effectName: "idle"
   property string effectMode: "idle"
   property bool randomMode: false
+  property var queuedAction: null
   property int cycleStep: 0
   property bool strobeOn: false
   property bool effectActive: false
@@ -88,7 +89,10 @@ BarWidget {
   }
 
   function send(args, description, mode) {
-    if (actionProcess.running) return
+    if (actionProcess.running) {
+      root.queuedAction = { args: args, description: description, mode: mode }
+      return
+    }
     root.randomMode = mode === "random"
     root.statusText = description
     root.effectName = description
@@ -243,6 +247,13 @@ BarWidget {
       waitForEnd: true
     }
     onExited: function(exitCode) {
+      if (root.queuedAction) {
+        var next = root.queuedAction
+        root.queuedAction = null
+        root.actionCommand = []
+        Qt.callLater(function() { root.send(next.args, next.description, next.mode) })
+        return
+      }
       var output = String(root.actionOutputText || actionOutput.text || "").trim()
       var outputLines = output.split(/\r?\n/).filter(function(line) { return line.trim() !== "" })
       root.lastOutput = outputLines.length > 0 ? outputLines[outputLines.length - 1].trim() : ""
