@@ -12,7 +12,7 @@ Panel {
 
   property var anchorItem: null
   property var hostWidget: null
-  property bool advancedOpen: false
+  property string page: "control"
   readonly property var barIdentity: hostWidget || root
   readonly property color contentForeground: bar ? bar.foreground : Color.foreground
   readonly property string contentFontFamily: bar ? bar.fontFamily : Style.font.family
@@ -26,17 +26,10 @@ Panel {
     Qt.callLater(function() { root.popoutSwitchClosing = false })
   }
 
-  function color(hex) {
-    if (hostWidget) hostWidget.applyColor(hex)
-  }
-
+  function color(value) { if (hostWidget) hostWidget.applyColor(value) }
   function off() { if (hostWidget) hostWidget.turnOff() }
   function random() { if (hostWidget) hostWidget.randomColor() }
   function blink() { if (hostWidget) hostWidget.blink() }
-  function flash() { if (hostWidget) hostWidget.flash() }
-  function glimmer() { if (hostWidget) hostWidget.glimmer() }
-  function chase(value) { if (hostWidget) hostWidget.chase(value) }
-  function pattern(value) { if (hostWidget) hostWidget.playPattern(value) }
   function mode(value) {
     if (!hostWidget) return
     if (value === "cycle") hostWidget.colorCycle()
@@ -45,6 +38,7 @@ Panel {
     else if (value === "white") hostWidget.applyColor("#FFFFFF")
     else if (value === "off") hostWidget.turnOff()
   }
+  function pattern(value) { if (hostWidget) hostWidget.playPattern(value) }
 
   KeyboardPanel {
     id: panel
@@ -54,35 +48,86 @@ Panel {
     open: root.opened
     centerOnBar: true
     focusTarget: keyCatcher
-    contentWidth: panel.fittedContentWidth(Style.space(430))
-    contentHeight: panel.fittedContentHeight(contentColumn.implicitHeight)
+    contentWidth: panel.fittedContentWidth(Style.space(520))
+    contentHeight: panel.fittedContentHeight(pageLoader.item ? pageLoader.item.implicitHeight + Style.space(54) : Style.space(200))
 
     PanelKeyCatcher {
       id: keyCatcher
       anchors.fill: parent
       onCloseRequested: root.close()
       onTextKey: function(text) {
-        if (text === "r" || text === "R") root.color("#FF3B30")
-        else if (text === "g" || text === "G") root.color("#34C759")
-        else if (text === "b" || text === "B") root.color("#0A84FF")
-        else if (text === "w" || text === "W") root.color("#FFFFFF")
-        else if (text === "o" || text === "O") root.off()
-        else if (text === "n" || text === "N") root.random()
-        else if (text === "x" || text === "X") root.blink()
+        if (text === "1") root.page = "control"
+        else if (text === "2") root.page = "colors"
+        else if (text === "3") root.page = "patterns"
+        else if (text === "4") root.page = "advanced"
+        else if (text === "r") root.color("#FF3B30")
+        else if (text === "g") root.color("#34C759")
+        else if (text === "b") root.color("#0A84FF")
+        else if (text === "o") root.off()
+        else if (text === "n") root.random()
+        else if (text === "x") root.blink()
       }
 
-      Flickable {
+      Column {
         anchors.fill: parent
-        contentWidth: contentColumn.width
-        contentHeight: contentColumn.implicitHeight
-        clip: true
-        boundsBehavior: Flickable.StopAtBounds
-        interactive: contentHeight > height
+        spacing: Style.space(12)
 
-        Column {
-        id: contentColumn
+        Row {
+          id: navigation
           width: parent.width
-        spacing: Style.space(16)
+          spacing: Style.space(6)
+          Repeater {
+            model: [
+              { label: "CONTROL", value: "control" },
+              { label: "COLORS", value: "colors" },
+              { label: "PATTERNS", value: "patterns" },
+              { label: "ADVANCED", value: "advanced" }
+            ]
+            Button {
+              required property var modelData
+              text: modelData.label
+              foreground: root.contentForeground
+              bordered: true
+              selected: root.page === modelData.value
+              onClicked: root.page = modelData.value
+            }
+          }
+        }
+
+        Flickable {
+          id: pageScroll
+          width: parent.width
+          height: parent.height - navigation.height - Style.space(12)
+          contentWidth: width
+          contentHeight: pageLoader.item ? pageLoader.item.implicitHeight : 0
+          clip: true
+          boundsBehavior: Flickable.StopAtBounds
+          interactive: contentHeight > height
+
+          Loader {
+            id: pageLoader
+            width: pageScroll.width
+            sourceComponent: root.page === "control"
+              ? controlPage
+              : (root.page === "colors" ? colorsPage
+                : (root.page === "patterns" ? patternsPage : advancedPage))
+          }
+        }
+      }
+    }
+  }
+
+  Component {
+    id: controlPage
+    Column {
+      width: pageLoader.width
+      spacing: Style.space(14)
+      implicitHeight: implicitColumn.implicitHeight
+
+      Column {
+        id: implicitColumn
+        width: parent.width
+        spacing: Style.space(8)
 
         Row {
           spacing: Style.space(12)
@@ -92,18 +137,16 @@ Panel {
             radius: Style.cornerRadius
             color: hostWidget ? hostWidget.currentColor : Color.accent
             borderSpec: Border.flat(root.contentForeground, Math.max(1, Style.space(1)))
-            anchors.verticalCenter: parent.verticalCenter
-
             Rectangle {
               width: Style.space(12)
               height: width
               radius: width / 2
               color: root.contentForeground
               anchors.centerIn: parent
-              opacity: 0.9
             }
           }
           Column {
+            anchors.verticalCenter: parent.verticalCenter
             spacing: Style.space(2)
             Text {
               text: "blink(1)"
@@ -114,16 +157,50 @@ Panel {
             }
             Text {
               text: hostWidget ? hostWidget.statusText : "Ready"
-              color: hostWidget && !hostWidget.deviceAvailable
-                ? (root.bar ? root.bar.urgent : Color.urgent)
-                : Qt.darker(root.contentForeground, 1.5)
+              color: hostWidget && !hostWidget.deviceAvailable ? Color.urgent : Qt.darker(root.contentForeground, 1.5)
               font.family: root.contentFontFamily
               font.pixelSize: Style.font.caption
-              font.letterSpacing: 1
             }
           }
         }
 
+        Row {
+          spacing: Style.space(6)
+          Button {
+            text: "ALL DEVICES"
+            foreground: root.contentForeground
+            bordered: true
+            selected: hostWidget && hostWidget.selectedDevice === "all"
+            onClicked: if (hostWidget) hostWidget.selectDevice("all")
+          }
+          Repeater {
+            model: hostWidget ? hostWidget.devices : []
+            Button {
+              required property var modelData
+              text: "DEVICE " + modelData.id + (modelData.serial ? " · " + String(modelData.serial).slice(-4) : "")
+              foreground: root.contentForeground
+              bordered: true
+              selected: hostWidget && hostWidget.selectedDevice === String(modelData.id)
+              tooltipText: modelData.serial ? "Serial " + modelData.serial : "Device " + modelData.id
+              onClicked: if (hostWidget) hostWidget.selectDevice(modelData.id)
+            }
+          }
+        }
+
+        Text {
+          text: hostWidget && hostWidget.devices.length > 0
+            ? hostWidget.devices.length + " connected"
+            : "No device detected"
+          color: Qt.darker(root.contentForeground, 1.5)
+          font.family: root.contentFontFamily
+          font.pixelSize: Style.font.bodySmall
+        }
+
+        PanelSectionHeader {
+          text: "MODES"
+          foreground: root.contentForeground
+          fontFamily: root.contentFontFamily
+        }
         Grid {
           columns: 5
           rowSpacing: Style.space(6)
@@ -147,82 +224,8 @@ Panel {
           }
         }
 
-        Text {
-          text: "COLORS"
-          color: Qt.darker(root.contentForeground, 1.5)
-          font.family: root.contentFontFamily
-          font.pixelSize: Style.font.bodySmall
-          font.letterSpacing: 1.2
-        }
-
-        Grid {
-          columns: 4
-          rowSpacing: Style.space(8)
-          columnSpacing: Style.space(8)
-          Repeater {
-            model: [
-              { label: "RED", value: "#FF3B30" },
-              { label: "GREEN", value: "#34C759" },
-              { label: "BLUE", value: "#0A84FF" },
-              { label: "WHITE", value: "#FFFFFF" },
-              { label: "ORANGE", value: "#FF9500" },
-              { label: "PURPLE", value: "#AF52DE" },
-              { label: "TEAL", value: "#30D5C8" },
-              { label: "PINK", value: "#FF375F" }
-            ]
-            Button {
-              required property var modelData
-              iconText: "●"
-              text: modelData.label
-              foreground: modelData.value
-              accent: modelData.value
-              selected: hostWidget && String(hostWidget.currentColor).toUpperCase() === modelData.value
-              onClicked: root.color(modelData.value)
-            }
-          }
-        }
-
-        PanelSectionHeader {
-          text: "COLOR PICKER"
-          foreground: root.contentForeground
-          fontFamily: root.contentFontFamily
-        }
-
-        Grid {
-          columns: 12
-          rowSpacing: Style.space(4)
-          columnSpacing: Style.space(4)
-          Repeater {
-            model: [
-              "#FF3B30", "#FF9500", "#FFCC00", "#34C759", "#30D5C8", "#0A84FF",
-              "#5856D6", "#AF52DE", "#FF2D55", "#FFFFFF", "#A0A0A0", "#000000",
-              "#8B1E1E", "#9A5700", "#8A7200", "#176B32", "#167A73", "#07539E",
-              "#34328A", "#713594", "#9E1C3E", "#D8D8D8", "#555555", "#171717"
-            ]
-            Button {
-              required property string modelData
-              width: Style.space(24)
-              height: Style.space(24)
-              background: modelData
-              foreground: modelData === "#000000" || modelData === "#171717" ? "#FFFFFF" : modelData
-              accent: modelData
-              bordered: true
-              selected: hostWidget && String(hostWidget.currentColor).toUpperCase() === modelData
-              tooltipText: modelData
-              onClicked: root.color(modelData)
-            }
-          }
-        }
-
         Row {
           spacing: Style.space(8)
-          Button {
-            text: "OFF"
-            foreground: root.contentForeground
-            bordered: true
-            selected: hostWidget && hostWidget.effectMode === "off"
-            onClicked: root.off()
-          }
           Button {
             text: "RANDOM"
             foreground: root.contentForeground
@@ -240,50 +243,92 @@ Panel {
         }
 
         Row {
-          spacing: Style.space(6)
-          Button {
-            text: "ALL DEVICES"
-            foreground: root.contentForeground
-            bordered: true
-            iconText: "•"
-            selected: hostWidget && hostWidget.selectedDevice === "all"
-            onClicked: if (hostWidget) hostWidget.selectDevice("all")
+          spacing: Style.space(10)
+          Text {
+            text: "BRIGHTNESS"
+            color: root.contentForeground
+            font.family: root.contentFontFamily
+            font.pixelSize: Style.font.body
+            anchors.verticalCenter: parent.verticalCenter
           }
+          PanelSlider {
+            width: Math.max(Style.space(160), parent.width - Style.space(110))
+            bar: root.bar
+            minimum: 1
+            maximum: 255
+            integer: true
+            value: hostWidget ? hostWidget.brightness : 180
+            onReleased: if (hostWidget) hostWidget.setBrightness(value)
+          }
+        }
+      }
+    }
+  }
+
+  Component {
+    id: colorsPage
+    Column {
+      width: pageLoader.width
+      spacing: Style.space(14)
+      implicitHeight: colorColumn.implicitHeight
+      Column {
+        id: colorColumn
+        width: parent.width
+        spacing: Style.space(12)
+        PanelSectionHeader {
+          text: "PRESETS"
+          foreground: root.contentForeground
+          fontFamily: root.contentFontFamily
+        }
+        Grid {
+          columns: 4
+          rowSpacing: Style.space(6)
+          columnSpacing: Style.space(6)
           Repeater {
-            model: hostWidget ? hostWidget.devices : []
+            model: [
+              { label: "RED", value: "#FF3B30" }, { label: "GREEN", value: "#34C759" },
+              { label: "BLUE", value: "#0A84FF" }, { label: "WHITE", value: "#FFFFFF" },
+              { label: "ORANGE", value: "#FF9500" }, { label: "PURPLE", value: "#AF52DE" },
+              { label: "TEAL", value: "#30D5C8" }, { label: "PINK", value: "#FF375F" }
+            ]
             Button {
               required property var modelData
-              text: "DEVICE " + modelData.id + (modelData.serial ? " · " + String(modelData.serial).slice(-4) : "")
-              foreground: root.contentForeground
-              bordered: true
-              selected: hostWidget && hostWidget.selectedDevice === String(modelData.id)
-              tooltipText: modelData.serial
-                ? "Serial " + modelData.serial + (modelData.firmware ? " · firmware " + modelData.firmware : "")
-                : "Device " + modelData.id
-              onClicked: if (hostWidget) hostWidget.selectDevice(modelData.id)
+              iconText: "●"
+              text: modelData.label
+              foreground: modelData.value
+              accent: modelData.value
+              selected: hostWidget && String(hostWidget.currentColor).toUpperCase() === modelData.value
+              onClicked: root.color(modelData.value)
             }
           }
         }
-
-        Text {
-          text: hostWidget && hostWidget.devices.length > 0
-            ? hostWidget.devices.length + " connected · click a target · "
-              + (function() {
-                  for (var i = 0; i < hostWidget.devices.length; i++) {
-                    var d = hostWidget.devices[i]
-                    if (String(d.id) === String(hostWidget.selectedDevice))
-                      return "Serial " + (d.serial || "unknown") + (d.firmware ? " · " + d.firmware : "")
-                  }
-                  return "all devices"
-                })()
-            : "No device detected"
-          color: Qt.darker(root.contentForeground, 1.5)
-          font.family: root.contentFontFamily
-          font.pixelSize: Style.font.bodySmall
+        PanelSectionHeader {
+          text: "COLOR PICKER"
+          foreground: root.contentForeground
+          fontFamily: root.contentFontFamily
         }
-
+        Grid {
+          columns: 12
+          rowSpacing: Style.space(4)
+          columnSpacing: Style.space(4)
+          Repeater {
+            model: ["#FF3B30", "#FF9500", "#FFCC00", "#34C759", "#30D5C8", "#0A84FF", "#5856D6", "#AF52DE", "#FF2D55", "#FFFFFF", "#A0A0A0", "#000000", "#8B1E1E", "#9A5700", "#8A7200", "#176B32", "#167A73", "#07539E", "#34328A", "#713594", "#9E1C3E", "#D8D8D8", "#555555", "#171717"]
+            Button {
+              required property string modelData
+              width: Style.space(24)
+              height: width
+              background: modelData
+              foreground: "#FFFFFF"
+              accent: modelData
+              bordered: true
+              selected: hostWidget && String(hostWidget.currentColor).toUpperCase() === modelData
+              tooltipText: modelData
+              onClicked: root.color(modelData)
+            }
+          }
+        }
         Row {
-          spacing: Style.space(10)
+          spacing: Style.space(8)
           Text {
             text: "HEX"
             color: root.contentForeground
@@ -293,41 +338,59 @@ Panel {
           }
           TextField {
             id: hexField
-            width: Style.space(130)
+            width: Style.space(145)
             text: hostWidget ? hostWidget.currentColor : "#32D583"
             placeholderText: "#RRGGBB"
             validator: RegularExpressionValidator { regularExpression: /^#?[0-9a-fA-F]{6}$/ }
             onAccepted: root.color(text)
           }
         }
-
         Row {
-          spacing: Style.space(12)
-        Text {
-          text: "BRIGHTNESS"
-            color: root.contentForeground
-            font.family: root.contentFontFamily
-            font.pixelSize: Style.font.body
-            anchors.verticalCenter: parent.verticalCenter
+          spacing: Style.space(6)
+          TextField {
+            id: hueField
+            width: Style.space(58)
+            placeholderText: "H"
+            inputMethodHints: Qt.ImhDigitsOnly
           }
-          PanelSlider {
-            id: brightnessSlider
-            width: Style.space(190)
-            bar: root.bar
-            minimum: 1
-            maximum: 255
-            integer: true
-            value: hostWidget ? hostWidget.brightness : 180
-            onReleased: if (hostWidget) hostWidget.setBrightness(value)
+          TextField {
+            id: saturationField
+            width: Style.space(58)
+            placeholderText: "S"
+            inputMethodHints: Qt.ImhDigitsOnly
+          }
+          TextField {
+            id: hsbField
+            width: Style.space(58)
+            placeholderText: "B"
+            inputMethodHints: Qt.ImhDigitsOnly
+          }
+          Button {
+            text: "APPLY HSB"
+            foreground: root.contentForeground
+            bordered: true
+            onClicked: if (hostWidget) hostWidget.runHsb(hueField.text || 0, saturationField.text || 100, hsbField.text || 100)
           }
         }
+      }
+    }
+  }
 
+  Component {
+    id: patternsPage
+    Column {
+      width: pageLoader.width
+      spacing: Style.space(12)
+      implicitHeight: patternColumn.implicitHeight
+      Column {
+        id: patternColumn
+        width: parent.width
+        spacing: Style.space(8)
         PanelSectionHeader {
-          text: "COLOR PATTERNS"
+          text: "OFFICIAL PATTERNS"
           foreground: root.contentForeground
           fontFamily: root.contentFontFamily
         }
-
         Grid {
           columns: 3
           rowSpacing: Style.space(6)
@@ -353,142 +416,131 @@ Panel {
             }
           }
         }
-
-        Button {
-          width: parent.width
-          text: root.advancedOpen ? "HIDE ADVANCED" : "SHOW ADVANCED"
+        PanelSectionHeader {
+          text: "CUSTOM PATTERN"
           foreground: root.contentForeground
-          bordered: true
-          iconText: root.advancedOpen ? "−" : "+"
-          onClicked: root.advancedOpen = !root.advancedOpen
+          fontFamily: root.contentFontFamily
         }
-
         Text {
-          text: "COLOR MODES"
-          visible: root.advancedOpen
-          height: visible ? implicitHeight : 0
+          text: "Pattern format: repeats,#RRGGBB,time,led,..."
           color: Qt.darker(root.contentForeground, 1.5)
           font.family: root.contentFontFamily
           font.pixelSize: Style.font.bodySmall
-          font.letterSpacing: 1.2
         }
-
         Row {
-          visible: root.advancedOpen
-          height: visible ? implicitHeight : 0
-          spacing: Style.space(8)
-          TextField { id: hueField; width: Style.space(55); placeholderText: "H"; inputMethodHints: Qt.ImhDigitsOnly }
-          TextField { id: saturationField; width: Style.space(55); placeholderText: "S"; inputMethodHints: Qt.ImhDigitsOnly }
-          TextField { id: hsbBrightnessField; width: Style.space(55); placeholderText: "B"; inputMethodHints: Qt.ImhDigitsOnly }
+          spacing: Style.space(6)
+          TextField {
+            id: patternField
+            width: Style.space(300)
+            placeholderText: "0,#ff0000,0.5,0,#0000ff,0.5,0"
+          }
           Button {
-            text: "APPLY HSB"
+            text: "PLAY"
             foreground: root.contentForeground
-            onClicked: if (hostWidget) hostWidget.runHsb(hueField.text || 0, saturationField.text || 100, hsbBrightnessField.text || 100)
+            bordered: true
+            onClicked: if (hostWidget) hostWidget.playPattern(patternField.text)
+          }
+          Button {
+            text: "WRITE"
+            foreground: root.contentForeground
+            bordered: true
+            onClicked: if (hostWidget) hostWidget.writePattern(patternField.text)
           }
         }
+      }
+    }
+  }
 
-        Row {
-          visible: root.advancedOpen
-          height: visible ? implicitHeight : 0
-          spacing: Style.space(8)
-          Button { text: "FLASH"; foreground: root.contentForeground; onClicked: root.flash() }
-          Button { text: "GLIMMER"; foreground: root.contentForeground; onClicked: root.glimmer() }
-          Button { text: "CHASE"; foreground: root.contentForeground; onClicked: root.chase("5,1,2") }
-          Button { text: "READ RGB"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.readLastColor() }
-        }
-
-        Text {
-          text: "PATTERNS"
-          visible: root.advancedOpen
-          height: visible ? implicitHeight : 0
-          color: Qt.darker(root.contentForeground, 1.5)
-          font.family: root.contentFontFamily
-          font.pixelSize: Style.font.bodySmall
-          font.letterSpacing: 1.2
-        }
-
-        Row {
-          visible: root.advancedOpen
-          height: visible ? implicitHeight : 0
-          spacing: Style.space(8)
-          Button { text: "SAVE"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.savePattern() }
-          Button { text: "CLEAR"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.clearPattern() }
-          Button { text: "PLAY STATE"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.playState() }
-          Button { text: "READ"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.readPattern() }
-        }
-
-        Row {
-          visible: root.advancedOpen
-          height: visible ? implicitHeight : 0
-          spacing: Style.space(8)
-          TextField { id: patternField; width: Style.space(235); placeholderText: "Pattern string" }
-          Button { text: "PLAY"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.playPattern(patternField.text) }
-          Button { text: "WRITE"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.writePattern(patternField.text) }
-        }
-
-        Text {
+  Component {
+    id: advancedPage
+    Column {
+      width: pageLoader.width
+      spacing: Style.space(12)
+      implicitHeight: advancedColumn.implicitHeight
+      Column {
+        id: advancedColumn
+        width: parent.width
+        spacing: Style.space(8)
+        PanelSectionHeader {
           text: "DEVICE / FIRMWARE"
-          visible: root.advancedOpen
-          height: visible ? implicitHeight : 0
+          foreground: root.contentForeground
+          fontFamily: root.contentFontFamily
+        }
+        Row {
+          spacing: Style.space(6)
+          Button {
+            text: "FW VERSION"
+            foreground: root.contentForeground
+            bordered: true
+            onClicked: if (hostWidget) hostWidget.firmwareVersion()
+          }
+          Button {
+            text: "TOOL VERSION"
+            foreground: root.contentForeground
+            bordered: true
+            onClicked: if (hostWidget) hostWidget.toolVersion()
+          }
+          Button {
+            text: "DEVICE ID"
+            foreground: root.contentForeground
+            bordered: true
+            onClicked: if (hostWidget) hostWidget.deviceId()
+          }
+        }
+        Row {
+          spacing: Style.space(6)
+          Button {
+            text: "STARTUP"
+            foreground: root.contentForeground
+            bordered: true
+            onClicked: if (hostWidget) hostWidget.getStartup()
+          }
+          Button {
+            text: "TICKLE ON"
+            foreground: root.contentForeground
+            bordered: true
+            onClicked: if (hostWidget) hostWidget.serverTickle("1")
+          }
+          Button {
+            text: "TICKLE OFF"
+            foreground: root.contentForeground
+            bordered: true
+            onClicked: if (hostWidget) hostWidget.serverTickle("0")
+          }
+        }
+        PanelSectionHeader {
+          text: "RAW ARGUMENTS"
+          foreground: root.contentForeground
+          fontFamily: root.contentFontFamily
+        }
+        Text {
+          text: "Runs any blink1-tool option without a shell."
           color: Qt.darker(root.contentForeground, 1.5)
           font.family: root.contentFontFamily
           font.pixelSize: Style.font.bodySmall
-          font.letterSpacing: 1.2
         }
-
         Row {
-          visible: root.advancedOpen
-          height: visible ? implicitHeight : 0
-          spacing: Style.space(8)
-          Button { text: "FW VERSION"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.firmwareVersion() }
-          Button { text: "TOOL VERSION"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.toolVersion() }
-          Button { text: "DEVICE ID"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.deviceId() }
+          spacing: Style.space(6)
+          TextField {
+            id: advancedField
+            width: Style.space(320)
+            placeholderText: "--rgb FF9900 --blink 3"
+          }
+          Button {
+            text: "RUN"
+            foreground: root.contentForeground
+            bordered: true
+            onClicked: if (hostWidget) hostWidget.runAdvanced(advancedField.text)
+          }
         }
-
-        Row {
-          visible: root.advancedOpen
-          height: visible ? implicitHeight : 0
-          spacing: Style.space(8)
-          Button { text: "STARTUP"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.getStartup() }
-          Button { text: "SERVER TICKLE ON"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.serverTickle("1") }
-          Button { text: "SERVER TICKLE OFF"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.serverTickle("0") }
-        }
-
         Text {
-          text: "ADVANCED ARGUMENTS"
-          visible: root.advancedOpen
-          height: visible ? implicitHeight : 0
-          color: Qt.darker(root.contentForeground, 1.5)
-          font.family: root.contentFontFamily
-          font.pixelSize: Style.font.bodySmall
-          font.letterSpacing: 1.2
-        }
-
-        Row {
-          visible: root.advancedOpen
-          height: visible ? implicitHeight : 0
-          spacing: Style.space(8)
-          TextField { id: advancedField; width: Style.space(270); placeholderText: "e.g. --rgb FF9900 --blink 3" }
-          Button { text: "RUN"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.runAdvanced(advancedField.text) }
-        }
-
-        Text {
-          visible: root.advancedOpen && hostWidget && hostWidget.lastOutput !== ""
-          height: visible ? implicitHeight : 0
+          visible: hostWidget && hostWidget.lastOutput !== ""
           text: hostWidget ? hostWidget.lastOutput : ""
           color: root.contentForeground
           font.family: root.contentFontFamily
           font.pixelSize: Style.font.bodySmall
           wrapMode: Text.Wrap
           width: parent.width
-        }
-
-        Text {
-          text: "R/G/B/W · O off · N random · X blink · Esc close"
-          color: Qt.darker(root.contentForeground, 1.5)
-          font.family: root.contentFontFamily
-          font.pixelSize: Style.font.bodySmall
-        }
         }
       }
     }
