@@ -86,7 +86,7 @@ BarWidget {
     root.effectName = description
     root.effectActive = true
     effectTimer.restart()
-    root.actionCommand = ["blink1-tool"].concat(root.deviceArguments()).concat(args)
+    root.actionCommand = ["/usr/bin/blink1-tool"].concat(root.deviceArguments()).concat(args)
     actionProcess.running = true
   }
 
@@ -201,6 +201,10 @@ BarWidget {
       waitForEnd: true
       onStreamFinished: root.actionOutputText = text
     }
+    stderr: StdioCollector {
+      id: actionError
+      waitForEnd: true
+    }
     onExited: function(exitCode) {
       root.lastOutput = String(root.actionOutputText || actionOutput.text || "").trim()
       if (exitCode === 0) {
@@ -208,7 +212,8 @@ BarWidget {
         root.statusText = root.lastOutput !== "" ? root.lastOutput : "blink(1) ready"
       } else {
         root.deviceAvailable = false
-        root.statusText = "blink1-tool failed (check udev)"
+        root.lastOutput = String(actionError.text || root.lastOutput || "").trim()
+        root.statusText = "blink1-tool failed"
       }
       root.actionCommand = []
       root.refreshDevice()
