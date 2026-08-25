@@ -243,27 +243,32 @@ BarWidget {
     anchors.fill: parent
     bar: root.bar
     iconComponent: Component {
-      Image {
+      Item {
         anchors.fill: parent
-        source: Qt.resolvedUrl(root.effectActive ? "thingm.svg" : "thingm.png")
-        fillMode: Image.PreserveAspectFit
-        smooth: true
-        opacity: root.deviceAvailable ? 1.0 : 0.45
-      }
-      Rectangle {
-        width: Math.max(5, Math.round(parent.width * 0.24))
-        height: width
-        radius: width / 2
-        anchors.centerIn: parent
-        color: root.currentColor
-        opacity: root.deviceAvailable ? 1.0 : 0.45
-        scale: pulseScale
-        property real pulseScale: 1.0
-        SequentialAnimation on pulseScale {
-          running: root.effectActive
-          loops: Animation.Infinite
-          NumberAnimation { to: 0.78; duration: 220; easing.type: Easing.OutCubic }
-          NumberAnimation { to: 1.0; duration: 420; easing.type: Easing.InOutCubic }
+
+        Image {
+          anchors.fill: parent
+          source: Qt.resolvedUrl(root.effectActive ? "thingm.svg" : "thingm.png")
+          fillMode: Image.PreserveAspectFit
+          smooth: true
+          opacity: root.deviceAvailable ? 1.0 : 0.45
+        }
+
+        Rectangle {
+          width: Math.max(5, Math.round(parent.width * 0.24))
+          height: width
+          radius: width / 2
+          anchors.centerIn: parent
+          color: root.currentColor
+          opacity: root.deviceAvailable ? 1.0 : 0.45
+          scale: pulseScale
+          property real pulseScale: 1.0
+          SequentialAnimation on pulseScale {
+            running: root.effectActive
+            loops: Animation.Infinite
+            NumberAnimation { to: 0.78; duration: 220; easing.type: Easing.OutCubic }
+            NumberAnimation { to: 1.0; duration: 420; easing.type: Easing.InOutCubic }
+          }
         }
       }
     }
