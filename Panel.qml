@@ -185,9 +185,27 @@ Panel {
 
         Row {
           spacing: Style.space(8)
-          Button { text: "OFF"; foreground: root.contentForeground; onClicked: root.off() }
-          Button { text: "RANDOM"; foreground: root.contentForeground; onClicked: root.random() }
-          Button { text: "BLINK"; foreground: root.contentForeground; onClicked: root.blink() }
+          Button {
+            text: "OFF"
+            foreground: root.contentForeground
+            bordered: true
+            selected: hostWidget && hostWidget.effectMode === "off"
+            onClicked: root.off()
+          }
+          Button {
+            text: "RANDOM"
+            foreground: root.contentForeground
+            bordered: true
+            selected: hostWidget && hostWidget.effectMode === "random"
+            onClicked: root.random()
+          }
+          Button {
+            text: "BLINK"
+            foreground: root.contentForeground
+            bordered: true
+            selected: hostWidget && hostWidget.effectMode === "blink"
+            onClicked: root.blink()
+          }
         }
 
         Row {

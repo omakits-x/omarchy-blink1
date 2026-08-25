@@ -16,6 +16,7 @@ BarWidget {
   property string statusText: "Checking blink(1)…"
   property string lastOutput: ""
   property string effectName: "idle"
+  property string effectMode: "idle"
   property bool effectActive: false
   property real pulseOpacity: 1.0
   property string deviceOutputText: ""
@@ -83,6 +84,7 @@ BarWidget {
     if (actionProcess.running) return
     root.statusText = description
     root.effectName = description
+    root.effectMode = "effect"
     root.effectActive = true
     effectTimer.restart()
     root.actionCommand = ["blink1-tool"].concat(root.deviceArguments()).concat(args)
@@ -95,6 +97,7 @@ BarWidget {
     root.currentColor = hex
     persist({ color: hex })
     send(["--brightness", String(root.brightness), "--millis", "180", "--rgb", hex], "Setting " + hex)
+    root.effectMode = "color"
     return true
   }
 
@@ -103,18 +106,22 @@ BarWidget {
     root.brightness = next
     persist({ brightness: next })
     send(["--brightness", String(next), "--millis", "120", "--rgb", root.currentColor], "Brightness " + next)
+    root.effectMode = "color"
   }
 
   function turnOff() {
     send(["--off"], "Turning off")
+    root.effectMode = "off"
   }
 
   function randomColor() {
     send(["--random"], "Random color")
+    root.effectMode = "random"
   }
 
   function blink() {
     send(["--millis", "100", "--delay", "180", "--rgb", root.currentColor, "--blink", "3"], "Blinking")
+    root.effectMode = "blink"
   }
 
   function runHsb(hue, saturation, value) {
@@ -227,6 +234,7 @@ BarWidget {
     onTriggered: {
       root.effectActive = false
       root.effectName = "idle"
+      if (root.effectMode !== "off") root.effectMode = "idle"
       root.pulseOpacity = 1.0
     }
   }
