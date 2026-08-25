@@ -426,12 +426,12 @@ Panel {
           columnSpacing: Style.space(6)
           Repeater {
             model: [
-              { label: "RED FLASH", value: "3,#ff0000,0.5,0,#000000,0.5," },
-              { label: "GREEN FLASH", value: "3,#00ff00,0.5,0,#000000,0.5," },
-              { label: "BLUE FLASH", value: "3,#0000ff,0.5,0,#000000,0.5," },
-              { label: "WHITE FLASH", value: "3,#ffffff,0.5,0,#000000,0.5," },
-              { label: "YELLOW FLASH", value: "3,#ffff00,0.5,0,#000000,0.5," },
-              { label: "PURPLE FLASH", value: "3,#ff00ff,0.5,0,#000000,0.5," },
+              { label: "RED FLASH", value: "3,#ff0000,0.5,0,#000000,0.5,0" },
+              { label: "GREEN FLASH", value: "3,#00ff00,0.5,0,#000000,0.5,0" },
+              { label: "BLUE FLASH", value: "3,#0000ff,0.5,0,#000000,0.5,0" },
+              { label: "WHITE FLASH", value: "3,#ffffff,0.5,0,#000000,0.5,0" },
+              { label: "YELLOW FLASH", value: "3,#ffff00,0.5,0,#000000,0.5,0" },
+              { label: "PURPLE FLASH", value: "3,#ff00ff,0.5,0,#000000,0.5,0" },
               { label: "GROOVY", value: "3,#ff4cff,1.0,0,#630000,0.2,0,#0000ff,0.1,0" },
               { label: "POLICE CAR", value: "6,#ff0000,0.3,1,#0000ff,0.3,2,#000000,0.1,0,#ff0000,0.3,2,#0000ff,0.3,1,#000000,0.1,0" },
               { label: "FIRE ENGINE", value: "6,#ff0000,0.3,1,#ff0000,0.3,2,#000000,0.1,0,#ff0000,0.3,2,#ff0000,0.3,1,#000000,0.1,0" }
