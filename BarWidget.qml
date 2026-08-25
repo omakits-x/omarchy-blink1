@@ -52,7 +52,7 @@ BarWidget {
   }
 
   function parseDeviceLine(line) {
-    var match = String(line || "").match(/\\bid\\s*:\\s*(\\d+)/i)
+    var match = String(line || "").match(/\bid\s*:\s*(\d+)/i)
     if (!match) return
     var id = String(match[1])
     var next = root.devices.slice()
