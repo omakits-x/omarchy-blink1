@@ -17,6 +17,7 @@ BarWidget {
   property string lastOutput: ""
   property string effectName: "idle"
   property string effectMode: "idle"
+  property bool randomMode: false
   property bool effectActive: false
   property real pulseOpacity: 1.0
   property string deviceOutputText: ""
@@ -80,8 +81,9 @@ BarWidget {
     root.statusText = next === "all" ? "All blink(1) devices" : "Device " + next + " selected"
   }
 
-  function send(args, description) {
+  function send(args, description, keepRandom) {
     if (actionProcess.running) return
+    if (keepRandom !== true) root.randomMode = false
     root.statusText = description
     root.effectName = description
     root.effectMode = "effect"
@@ -115,7 +117,8 @@ BarWidget {
   }
 
   function randomColor() {
-    send(["--random"], "Random color")
+    root.randomMode = true
+    send(["--random"], "Random color", true)
     root.effectMode = "random"
   }
 
@@ -232,11 +235,24 @@ BarWidget {
     interval: 3200
     repeat: false
     onTriggered: {
+      if (root.randomMode) {
+        root.effectActive = true
+        restart()
+        return
+      }
       root.effectActive = false
       root.effectName = "idle"
       if (root.effectMode !== "off") root.effectMode = "idle"
       root.pulseOpacity = 1.0
     }
+  }
+
+  Timer {
+    id: randomTimer
+    interval: 1200
+    repeat: true
+    running: root.randomMode
+    onTriggered: root.send(["--random"], "Random color", true)
   }
 
   Loader {
