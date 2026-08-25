@@ -15,6 +15,11 @@ BarWidget {
   property bool deviceAvailable: false
   property string statusText: "Checking blink(1)…"
   property string lastOutput: ""
+  property string effectName: "idle"
+  property bool effectActive: false
+  property real pulseOpacity: 1.0
+  property string deviceOutputText: ""
+  property string actionOutputText: ""
   property var actionCommand: []
 
   readonly property bool panelOpen: panelLoader.item ? panelLoader.item.opened === true : false
@@ -38,11 +43,14 @@ BarWidget {
   }
 
   function refreshDevice() {
-    if (!deviceCheck.running) deviceCheck.running = true
+    if (!deviceCheck.running) {
+      root.deviceOutputText = ""
+      deviceCheck.running = true
+    }
   }
 
   function deviceArguments() {
-    return ["--id", root.selectedDevice]
+    return root.selectedDevice === "all" ? [] : ["--id", root.selectedDevice]
   }
 
   function cycleDevice() {
@@ -58,6 +66,9 @@ BarWidget {
   function send(args, description) {
     if (actionProcess.running) return
     root.statusText = description
+    root.effectName = description
+    root.effectActive = true
+    effectTimer.restart()
     root.actionCommand = ["blink1-tool"].concat(root.deviceArguments()).concat(args)
     actionProcess.running = true
   }
@@ -149,13 +160,17 @@ BarWidget {
     id: deviceCheck
     command: ["blink1-tool", "--list"]
     running: false
-    stdout: StdioCollector { id: deviceOutput; waitForEnd: true }
+    stdout: StdioCollector {
+      id: deviceOutput
+      waitForEnd: true
+      onStreamFinished: root.deviceOutputText = text
+    }
     onExited: function(exitCode) {
-      var output = String(deviceOutput.text || "")
+      var output = String(root.deviceOutputText || deviceOutput.text || "")
       var found = []
       var lines = output.split("\\n")
       for (var i = 0; i < lines.length; i++) {
-        var match = lines[i].match(/id:(\\d+)/)
+        var match = lines[i].match(/\\bid\\s*:\\s*(\\d+)/i)
         if (match) found.push({ id: match[1], label: lines[i].trim() })
       }
       root.devices = found
@@ -175,9 +190,13 @@ BarWidget {
     id: actionProcess
     command: root.actionCommand
     running: false
-    stdout: StdioCollector { id: actionOutput; waitForEnd: true }
+    stdout: StdioCollector {
+      id: actionOutput
+      waitForEnd: true
+      onStreamFinished: root.actionOutputText = text
+    }
     onExited: function(exitCode) {
-      root.lastOutput = String(actionOutput.text || "").trim()
+      root.lastOutput = String(root.actionOutputText || actionOutput.text || "").trim()
       if (exitCode === 0) {
         root.deviceAvailable = true
         root.statusText = root.lastOutput !== "" ? root.lastOutput : "blink(1) ready"
@@ -197,6 +216,17 @@ BarWidget {
     onTriggered: root.refreshDevice()
   }
 
+  Timer {
+    id: effectTimer
+    interval: 3200
+    repeat: false
+    onTriggered: {
+      root.effectActive = false
+      root.effectName = "idle"
+      root.pulseOpacity = 1.0
+    }
+  }
+
   Loader {
     id: panelLoader
     active: true
@@ -208,13 +238,39 @@ BarWidget {
     }
   }
 
-  WidgetButton {
+  BarIconButton {
     id: button
     anchors.fill: parent
     bar: root.bar
-    text: "●"
+    iconComponent: Component {
+      Image {
+        anchors.fill: parent
+        source: Qt.resolvedUrl(root.effectActive ? "thingm.svg" : "thingm.png")
+        fillMode: Image.PreserveAspectFit
+        smooth: true
+        opacity: root.deviceAvailable ? 1.0 : 0.45
+      }
+      Rectangle {
+        width: Math.max(5, Math.round(parent.width * 0.24))
+        height: width
+        radius: width / 2
+        anchors.centerIn: parent
+        color: root.currentColor
+        opacity: root.deviceAvailable ? 1.0 : 0.45
+        scale: pulseScale
+        property real pulseScale: 1.0
+        SequentialAnimation on pulseScale {
+          running: root.effectActive
+          loops: Animation.Infinite
+          NumberAnimation { to: 0.78; duration: 220; easing.type: Easing.OutCubic }
+          NumberAnimation { to: 1.0; duration: 420; easing.type: Easing.InOutCubic }
+        }
+      }
+    }
     foreground: root.deviceAvailable ? root.currentColor : (root.bar ? root.bar.barForeground : Color.foreground)
-    tooltipText: root.deviceAvailable ? "blink(1) · " + root.currentColor : "blink(1) unavailable"
+    tooltipText: root.deviceAvailable
+      ? "blink(1) · " + root.currentColor + " · " + root.effectName
+      : "blink(1) unavailable"
     onPressed: function(b) {
       if (b === Qt.RightButton) root.randomColor()
       else if (b === Qt.MiddleButton) root.turnOff()

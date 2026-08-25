@@ -6,6 +6,9 @@ official Omarchy shell plugin contract and invokes `blink1-tool` directly.
 ## Features
 
 - Bar indicator colored with the last selected RGB value.
+- ThingM mark shown as the bar icon, with a muted state while disconnected.
+- The supplied ThingM artwork is used while idle; active effects use a colored,
+  gently pulsing status mark and return to the artwork when finished.
 - Popup controls for red, green, blue, white, off, random, and blink.
 - Additional presets for orange, purple, teal, and pink.
 - Custom `#RRGGBB` colors and brightness control.

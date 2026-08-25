@@ -12,6 +12,7 @@ Panel {
 
   property var anchorItem: null
   property var hostWidget: null
+  property bool advancedOpen: false
   readonly property var barIdentity: hostWidget || root
   readonly property color contentForeground: bar ? bar.foreground : Color.foreground
   readonly property string contentFontFamily: bar ? bar.fontFamily : Style.font.family
@@ -200,8 +201,17 @@ Panel {
           }
         }
 
+        Button {
+          width: parent.width
+          text: root.advancedOpen ? "HIDE ADVANCED" : "SHOW ADVANCED"
+          foreground: root.contentForeground
+          onClicked: root.advancedOpen = !root.advancedOpen
+        }
+
         Text {
           text: "COLOR MODES"
+          visible: root.advancedOpen
+          height: visible ? implicitHeight : 0
           color: Qt.darker(root.contentForeground, 1.5)
           font.family: root.contentFontFamily
           font.pixelSize: Style.font.bodySmall
@@ -209,6 +219,8 @@ Panel {
         }
 
         Row {
+          visible: root.advancedOpen
+          height: visible ? implicitHeight : 0
           spacing: Style.space(8)
           TextField { id: hueField; width: Style.space(55); placeholderText: "H"; inputMethodHints: Qt.ImhDigitsOnly }
           TextField { id: saturationField; width: Style.space(55); placeholderText: "S"; inputMethodHints: Qt.ImhDigitsOnly }
@@ -221,6 +233,8 @@ Panel {
         }
 
         Row {
+          visible: root.advancedOpen
+          height: visible ? implicitHeight : 0
           spacing: Style.space(8)
           Button { text: "FLASH"; foreground: root.contentForeground; onClicked: root.flash() }
           Button { text: "GLIMMER"; foreground: root.contentForeground; onClicked: root.glimmer() }
@@ -230,6 +244,8 @@ Panel {
 
         Text {
           text: "PATTERNS"
+          visible: root.advancedOpen
+          height: visible ? implicitHeight : 0
           color: Qt.darker(root.contentForeground, 1.5)
           font.family: root.contentFontFamily
           font.pixelSize: Style.font.bodySmall
@@ -237,6 +253,8 @@ Panel {
         }
 
         Row {
+          visible: root.advancedOpen
+          height: visible ? implicitHeight : 0
           spacing: Style.space(8)
           Button { text: "SAVE"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.savePattern() }
           Button { text: "CLEAR"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.clearPattern() }
@@ -245,6 +263,8 @@ Panel {
         }
 
         Row {
+          visible: root.advancedOpen
+          height: visible ? implicitHeight : 0
           spacing: Style.space(8)
           TextField { id: patternField; width: Style.space(235); placeholderText: "Pattern string" }
           Button { text: "PLAY"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.playPattern(patternField.text) }
@@ -253,6 +273,8 @@ Panel {
 
         Text {
           text: "DEVICE / FIRMWARE"
+          visible: root.advancedOpen
+          height: visible ? implicitHeight : 0
           color: Qt.darker(root.contentForeground, 1.5)
           font.family: root.contentFontFamily
           font.pixelSize: Style.font.bodySmall
@@ -260,6 +282,8 @@ Panel {
         }
 
         Row {
+          visible: root.advancedOpen
+          height: visible ? implicitHeight : 0
           spacing: Style.space(8)
           Button { text: "FW VERSION"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.firmwareVersion() }
           Button { text: "TOOL VERSION"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.toolVersion() }
@@ -267,6 +291,8 @@ Panel {
         }
 
         Row {
+          visible: root.advancedOpen
+          height: visible ? implicitHeight : 0
           spacing: Style.space(8)
           Button { text: "STARTUP"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.getStartup() }
           Button { text: "SERVER TICKLE ON"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.serverTickle("1") }
@@ -275,6 +301,8 @@ Panel {
 
         Text {
           text: "ADVANCED ARGUMENTS"
+          visible: root.advancedOpen
+          height: visible ? implicitHeight : 0
           color: Qt.darker(root.contentForeground, 1.5)
           font.family: root.contentFontFamily
           font.pixelSize: Style.font.bodySmall
@@ -282,6 +310,8 @@ Panel {
         }
 
         Row {
+          visible: root.advancedOpen
+          height: visible ? implicitHeight : 0
           spacing: Style.space(8)
           TextField { id: advancedField; width: Style.space(270); placeholderText: "e.g. --rgb FF9900 --blink 3" }
           Button { text: "RUN"; foreground: root.contentForeground; onClicked: if (hostWidget) hostWidget.runAdvanced(advancedField.text) }
@@ -289,6 +319,7 @@ Panel {
 
         Text {
           visible: hostWidget && hostWidget.lastOutput !== ""
+          height: visible ? implicitHeight : 0
           text: hostWidget ? hostWidget.lastOutput : ""
           color: root.contentForeground
           font.family: root.contentFontFamily
