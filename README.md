@@ -69,10 +69,19 @@ The rule source is also available in the [blink1 repository](https://github.com/
 omarchy plugin add https://github.com/omakits-x/omarchy-blink1.git --enable --yes
 ```
 
-The widget is added to the right side of the bar. Open it with a left click.
+Omarchy chooses the initial bar section when no placement is supplied. Open the
+widget with a left click.
 Right-click sends a random color, and middle-click turns the selected device(s)
 off. The panel's device button cycles through `ALL DEVICES` and every detected
 device ID.
+
+To choose the bar position explicitly, use one of:
+
+```bash
+omarchy plugin enable io.github.omakitsx.blink1 --section left
+omarchy plugin enable io.github.omakitsx.blink1 --section center
+omarchy plugin enable io.github.omakitsx.blink1 --section right
+```
 
 If the plugin is installed but not visible, rescan and enable it again:
 
