@@ -103,13 +103,22 @@ BarWidget {
     actionProcess.running = true
   }
 
+  function interrupt(args, description, mode) {
+    root.randomMode = false
+    root.queuedAction = null
+    if (actionProcess.running) {
+      actionProcess.running = false
+      root.actionCommand = []
+    }
+    Qt.callLater(function() { root.send(args, description, mode) })
+  }
+
   function applyColor(value) {
     var hex = normalizedHex(value)
     if (!hex) return false
     root.currentColor = hex
     persist({ color: hex })
-    send(["--brightness", String(root.brightness), "--millis", "180", "--rgb", hex], "Setting " + hex)
-    root.effectMode = "color"
+    interrupt(["--brightness", String(root.brightness), "--millis", "180", "--rgb", hex], "Setting " + hex, "color")
     return true
   }
 
@@ -117,34 +126,33 @@ BarWidget {
     var next = Math.max(1, Math.min(255, Math.round(Number(value))))
     root.brightness = next
     persist({ brightness: next })
-    send(["--brightness", String(next), "--millis", "120", "--rgb", root.currentColor], "Brightness " + next)
-    root.effectMode = "color"
+    interrupt(["--brightness", String(next), "--millis", "120", "--rgb", root.currentColor], "Brightness " + next, "color")
   }
 
   function turnOff() {
-    send(["--off"], "Turning off", "off")
+    interrupt(["--off"], "Turning off", "off")
   }
 
   function randomColor() {
-    send(["--random"], "Random color", "random")
+    interrupt(["--random"], "Random color", "random")
   }
 
   function blink() {
-    send(["--millis", "100", "--delay", "180", "--rgb", root.currentColor, "--blink", "3"], "Blinking", "blink")
+    interrupt(["--millis", "100", "--delay", "180", "--rgb", root.currentColor, "--blink", "3"], "Blinking", "blink")
   }
 
   function colorCycle() {
     root.cycleStep = 0
-    send(["--millis", "180", "--rgb", String(Qt.hsla(0, 1, 0.5, 1))], "Color cycle", "cycle")
+    interrupt(["--millis", "180", "--rgb", String(Qt.hsla(0, 1, 0.5, 1))], "Color cycle", "cycle")
   }
 
   function moodLight() {
-    send(["--random"], "Mood light", "mood")
+    interrupt(["--random"], "Mood light", "mood")
   }
 
   function strobe() {
     root.strobeOn = true
-    send(["--millis", "10", "--white"], "Strobe light", "strobe")
+    interrupt(["--millis", "10", "--white"], "Strobe light", "strobe")
   }
 
   function runSpecialStep() {
@@ -172,7 +180,7 @@ BarWidget {
   function savePattern() { send(["--savepattern"], "Saving pattern") }
   function clearPattern() { send(["--clearpattern"], "Clearing pattern") }
   function playState() { send(["--playstate"], "Reading pattern state") }
-  function playPattern(value) { send(["--playpattern", String(value)], "Playing pattern") }
+  function playPattern(value) { interrupt(["--playpattern", String(value)], "Playing pattern", "pattern") }
   function writePattern(value) { send(["--writepattern", String(value)], "Writing pattern") }
   function readPattern() { send(["--readpattern"], "Reading pattern") }
   function setPatternLine(position, value) {
