@@ -37,6 +37,14 @@ Panel {
   function glimmer() { if (hostWidget) hostWidget.glimmer() }
   function chase(value) { if (hostWidget) hostWidget.chase(value) }
   function pattern(value) { if (hostWidget) hostWidget.playPattern(value) }
+  function mode(value) {
+    if (!hostWidget) return
+    if (value === "cycle") hostWidget.colorCycle()
+    else if (value === "mood") hostWidget.moodLight()
+    else if (value === "strobe") hostWidget.strobe()
+    else if (value === "white") hostWidget.applyColor("#FFFFFF")
+    else if (value === "off") hostWidget.turnOff()
+  }
 
   KeyboardPanel {
     id: panel
@@ -292,12 +300,38 @@ Panel {
           columnSpacing: Style.space(6)
           Repeater {
             model: [
-              { label: "RED FLASH", value: "6,#ff0000,0.15,0,#000000,0.15,0" },
-              { label: "GREEN FLASH", value: "6,#00ff00,0.15,0,#000000,0.15,0" },
-              { label: "BLUE FLASH", value: "6,#0000ff,0.15,0,#000000,0.15,0" },
-              { label: "POLICE", value: "6,#ff0000,0.12,0,#0000ff,0.12,0" },
-              { label: "FIRE", value: "6,#ff2200,0.25,0,#ff9900,0.12,0" },
-              { label: "OFF", value: "1,#000000,0.1,0" }
+              { label: "COLOR CYCLE", mode: "cycle" },
+              { label: "MOOD LIGHT", mode: "mood" },
+              { label: "STROBE LIGHT", mode: "strobe" },
+              { label: "WHITE", mode: "white" },
+              { label: "OFF", mode: "off" }
+            ]
+            Button {
+              required property var modelData
+              text: modelData.label
+              foreground: root.contentForeground
+              bordered: true
+              selected: hostWidget && hostWidget.effectMode === modelData.mode
+              onClicked: root.mode(modelData.mode)
+            }
+          }
+        }
+
+        Grid {
+          columns: 3
+          rowSpacing: Style.space(6)
+          columnSpacing: Style.space(6)
+          Repeater {
+            model: [
+              { label: "RED FLASH", value: "3,#ff0000,0.5,0,#000000,0.5," },
+              { label: "GREEN FLASH", value: "3,#00ff00,0.5,0,#000000,0.5," },
+              { label: "BLUE FLASH", value: "3,#0000ff,0.5,0,#000000,0.5," },
+              { label: "WHITE FLASH", value: "3,#ffffff,0.5,0,#000000,0.5," },
+              { label: "YELLOW FLASH", value: "3,#ffff00,0.5,0,#000000,0.5," },
+              { label: "PURPLE FLASH", value: "3,#ff00ff,0.5,0,#000000,0.5," },
+              { label: "GROOVY", value: "3,#ff4cff,1.0,0,#630000,0.2,0,#0000ff,0.1,0" },
+              { label: "POLICE CAR", value: "6,#ff0000,0.3,1,#0000ff,0.3,2,#000000,0.1,0,#ff0000,0.3,2,#0000ff,0.3,1,#000000,0.1,0" },
+              { label: "FIRE ENGINE", value: "6,#ff0000,0.3,1,#ff0000,0.3,2,#000000,0.1,0,#ff0000,0.3,2,#ff0000,0.3,1,#000000,0.1,0" }
             ]
             Button {
               required property var modelData

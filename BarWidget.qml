@@ -18,6 +18,8 @@ BarWidget {
   property string effectName: "idle"
   property string effectMode: "idle"
   property bool randomMode: false
+  property int cycleStep: 0
+  property bool strobeOn: false
   property bool effectActive: false
   property real pulseOpacity: 1.0
   property string deviceOutputText: ""
@@ -81,12 +83,12 @@ BarWidget {
     root.statusText = next === "all" ? "All blink(1) devices" : "Device " + next + " selected"
   }
 
-  function send(args, description, keepRandom) {
+  function send(args, description, mode) {
     if (actionProcess.running) return
-    if (keepRandom !== true) root.randomMode = false
+    root.randomMode = mode === "random"
     root.statusText = description
     root.effectName = description
-    root.effectMode = "effect"
+    root.effectMode = mode || "effect"
     root.effectActive = true
     effectTimer.restart()
     root.actionCommand = ["blink1-tool"].concat(root.deviceArguments()).concat(args)
@@ -112,19 +114,39 @@ BarWidget {
   }
 
   function turnOff() {
-    send(["--off"], "Turning off")
-    root.effectMode = "off"
+    send(["--off"], "Turning off", "off")
   }
 
   function randomColor() {
-    root.randomMode = true
-    send(["--random"], "Random color", true)
-    root.effectMode = "random"
+    send(["--random"], "Random color", "random")
   }
 
   function blink() {
-    send(["--millis", "100", "--delay", "180", "--rgb", root.currentColor, "--blink", "3"], "Blinking")
-    root.effectMode = "blink"
+    send(["--millis", "100", "--delay", "180", "--rgb", root.currentColor, "--blink", "3"], "Blinking", "blink")
+  }
+
+  function colorCycle() {
+    root.cycleStep = 0
+    send(["--millis", "180", "--rgb", String(Qt.hsla(0, 1, 0.5, 1))], "Color cycle", "cycle")
+  }
+
+  function moodLight() {
+    send(["--random"], "Mood light", "mood")
+  }
+
+  function strobe() {
+    root.strobeOn = true
+    send(["--millis", "10", "--white"], "Strobe light", "strobe")
+  }
+
+  function runSpecialStep() {
+    if (root.effectMode === "cycle") {
+      root.cycleStep = (root.cycleStep + 15) % 360
+      send(["--millis", "180", "--rgb", String(Qt.hsla(root.cycleStep / 360, 1, 0.5, 1))], "Color cycle", "cycle")
+    } else if (root.effectMode === "strobe") {
+      root.strobeOn = !root.strobeOn
+      send(["--millis", "10", root.strobeOn ? "--white" : "--off"], "Strobe light", "strobe")
+    }
   }
 
   function runHsb(hue, saturation, value) {
@@ -252,7 +274,23 @@ BarWidget {
     interval: 1200
     repeat: true
     running: root.randomMode
-    onTriggered: root.send(["--random"], "Random color", true)
+    onTriggered: root.send(["--random"], "Random color", "random")
+  }
+
+  Timer {
+    id: moodTimer
+    interval: 2000
+    repeat: true
+    running: root.effectMode === "mood"
+    onTriggered: root.send(["--random"], "Mood light", "mood")
+  }
+
+  Timer {
+    id: specialTimer
+    interval: 200
+    repeat: true
+    running: root.effectMode === "cycle" || root.effectMode === "strobe"
+    onTriggered: root.runSpecialStep()
   }
 
   Loader {
