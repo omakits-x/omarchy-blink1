@@ -36,6 +36,7 @@ Panel {
   function flash() { if (hostWidget) hostWidget.flash() }
   function glimmer() { if (hostWidget) hostWidget.glimmer() }
   function chase(value) { if (hostWidget) hostWidget.chase(value) }
+  function pattern(value) { if (hostWidget) hostWidget.playPattern(value) }
 
   KeyboardPanel {
     id: panel
@@ -150,6 +151,38 @@ Panel {
           }
         }
 
+        PanelSectionHeader {
+          text: "COLOR PICKER"
+          foreground: root.contentForeground
+          fontFamily: root.contentFontFamily
+        }
+
+        Grid {
+          columns: 12
+          rowSpacing: Style.space(4)
+          columnSpacing: Style.space(4)
+          Repeater {
+            model: [
+              "#FF3B30", "#FF9500", "#FFCC00", "#34C759", "#30D5C8", "#0A84FF",
+              "#5856D6", "#AF52DE", "#FF2D55", "#FFFFFF", "#A0A0A0", "#000000",
+              "#8B1E1E", "#9A5700", "#8A7200", "#176B32", "#167A73", "#07539E",
+              "#34328A", "#713594", "#9E1C3E", "#D8D8D8", "#555555", "#171717"
+            ]
+            Button {
+              required property string modelData
+              width: Style.space(24)
+              height: Style.space(24)
+              background: modelData
+              foreground: modelData === "#000000" || modelData === "#171717" ? "#FFFFFF" : modelData
+              accent: modelData
+              bordered: true
+              selected: hostWidget && String(hostWidget.currentColor).toUpperCase() === modelData
+              tooltipText: modelData
+              onClicked: root.color(modelData)
+            }
+          }
+        }
+
         Row {
           spacing: Style.space(8)
           Button { text: "OFF"; foreground: root.contentForeground; onClicked: root.off() }
@@ -226,6 +259,35 @@ Panel {
             integer: true
             value: hostWidget ? hostWidget.brightness : 180
             onReleased: if (hostWidget) hostWidget.setBrightness(value)
+          }
+        }
+
+        PanelSectionHeader {
+          text: "COLOR PATTERNS"
+          foreground: root.contentForeground
+          fontFamily: root.contentFontFamily
+        }
+
+        Grid {
+          columns: 3
+          rowSpacing: Style.space(6)
+          columnSpacing: Style.space(6)
+          Repeater {
+            model: [
+              { label: "RED FLASH", value: "6,#ff0000,0.15,0,#000000,0.15,0" },
+              { label: "GREEN FLASH", value: "6,#00ff00,0.15,0,#000000,0.15,0" },
+              { label: "BLUE FLASH", value: "6,#0000ff,0.15,0,#000000,0.15,0" },
+              { label: "POLICE", value: "6,#ff0000,0.12,0,#0000ff,0.12,0" },
+              { label: "FIRE", value: "6,#ff2200,0.25,0,#ff9900,0.12,0" },
+              { label: "OFF", value: "1,#000000,0.1,0" }
+            ]
+            Button {
+              required property var modelData
+              text: modelData.label
+              foreground: root.contentForeground
+              bordered: true
+              onClicked: root.pattern(modelData.value)
+            }
           }
         }
 
