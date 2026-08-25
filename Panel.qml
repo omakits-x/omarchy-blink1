@@ -53,7 +53,7 @@ Panel {
     owner: root.barIdentity
     bar: root.bar
     open: root.opened
-    centerOnBar: true
+    centerOnBar: false
     focusTarget: keyCatcher
     contentWidth: panel.fittedContentWidth(Style.space(520))
     contentHeight: panel.fittedContentHeight(pageLoader.item ? pageLoader.item.implicitHeight + Style.space(54) : Style.space(200))
