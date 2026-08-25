@@ -85,7 +85,7 @@ BarWidget {
     root.effectName = description
     root.effectActive = true
     effectTimer.restart()
-    root.actionCommand = ["/usr/bin/blink1-tool"].concat(root.deviceArguments()).concat(args)
+    root.actionCommand = ["blink1-tool"].concat(root.deviceArguments()).concat(args)
     actionProcess.running = true
   }
 
@@ -174,7 +174,7 @@ BarWidget {
 
   Process {
     id: deviceCheck
-    command: ["/usr/bin/blink1-tool", "--list"]
+    command: ["blink1-tool", "--list"]
     running: false
     stdout: SplitParser { onRead: function(line) { root.parseDeviceLine(line) } }
     stderr: SplitParser { onRead: function(line) { root.parseDeviceLine(line) } }
