@@ -1,4 +1,5 @@
 # Omarchy blink(1) Control
+<img width="425" height="266" alt="image" src="https://github.com/user-attachments/assets/0e2b0eed-66d9-41d7-9a1e-2cb639fe3a02" />
 
 An Omarchy `bar-widget` for ThingM blink(1) USB status lights. It uses the
 official Omarchy shell plugin contract and invokes `blink1-tool` directly.
