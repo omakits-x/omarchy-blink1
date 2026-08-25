@@ -230,10 +230,13 @@ Panel {
             model: hostWidget ? hostWidget.devices : []
             Button {
               required property var modelData
-              text: "DEVICE " + modelData.id
+              text: "DEVICE " + modelData.id + (modelData.serial ? " · " + String(modelData.serial).slice(-4) : "")
               foreground: root.contentForeground
               bordered: true
               selected: hostWidget && hostWidget.selectedDevice === String(modelData.id)
+              tooltipText: modelData.serial
+                ? "Serial " + modelData.serial + (modelData.firmware ? " · firmware " + modelData.firmware : "")
+                : "Device " + modelData.id
               onClicked: if (hostWidget) hostWidget.selectDevice(modelData.id)
             }
           }
@@ -241,7 +244,15 @@ Panel {
 
         Text {
           text: hostWidget && hostWidget.devices.length > 0
-            ? hostWidget.devices.length + " connected · click a target"
+            ? hostWidget.devices.length + " connected · click a target · "
+              + (function() {
+                  for (var i = 0; i < hostWidget.devices.length; i++) {
+                    var d = hostWidget.devices[i]
+                    if (String(d.id) === String(hostWidget.selectedDevice))
+                      return "Serial " + (d.serial || "unknown") + (d.firmware ? " · " + d.firmware : "")
+                  }
+                  return "all devices"
+                })()
             : "No device detected"
           color: Qt.darker(root.contentForeground, 1.5)
           font.family: root.contentFontFamily

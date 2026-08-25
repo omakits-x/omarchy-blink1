@@ -59,9 +59,13 @@ BarWidget {
     var match = String(line || "").match(/\bid\s*:\s*(\d+)/i)
     if (!match) return
     var id = String(match[1])
+    var serialMatch = String(line).match(/serialnum:\s*([^\s]+)/i)
+    var firmwareMatch = String(line).match(/fw\s+version:\s*([^\s]+)/i)
+    var serial = serialMatch ? String(serialMatch[1]) : ""
+    var firmware = firmwareMatch ? String(firmwareMatch[1]) : ""
     var next = root.pendingDevices.slice()
     for (var i = 0; i < next.length; i++) if (String(next[i].id) === id) return
-    next.push({ id: id, label: String(line).trim() })
+    next.push({ id: id, serial: serial, firmware: firmware, label: String(line).trim() })
     root.pendingDevices = next
   }
 
